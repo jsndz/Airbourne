@@ -1,0 +1,17 @@
+services:
+  auth_db:
+    image: mysql:8.0
+    container_name: auth_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: airbourne
+      MYSQL_DATABASE: auth
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: airbourneisbest
+    ports:
+      - "3306:3306"
+    volumes:
+      - auth_db:/var/lib/mysql
+
+volumes:
+  auth_db:
