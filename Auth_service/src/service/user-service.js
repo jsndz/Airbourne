@@ -24,7 +24,6 @@ class UserService {
         "logical issues found ",
         500
       );
-      throw error;
     }
   }
 

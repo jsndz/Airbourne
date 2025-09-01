@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "admin",
+    "password": "pass",
+    "database": "auth",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "admin",
+    "password": "pass",
+    "database": "auth_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "admin",
+    "password": "pass",
+    "database": "auth_prod",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}

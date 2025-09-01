@@ -4,6 +4,7 @@ const { PORT, DB_SYNC } = require("./config/serverConfig");
 const ApiRoutes = require("./routes/index");
 const db = require("./models/index");
 const { User, Role } = require("./models/index");
+const { swaggerUi, swaggerSpec } = require("./config/swagger");
 
 const app = express();
 
@@ -17,6 +18,8 @@ const prepareAndstartServer = () => {
       success: true,
     });
   });
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
   app.listen(PORT, async () => {
     console.log(`server Started On Port :${PORT}`);
     if (process.env.DB_SYNC) {
