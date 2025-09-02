@@ -13,5 +13,20 @@ services:
     volumes:
       - auth_db:/var/lib/mysql
 
+  flights_db:
+    image: mysql:8.0
+    container_name: flights_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: airbourne
+      MYSQL_DATABASE: flights
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: airbourneisbest
+    ports:
+      - "3307:3306"
+    volumes:
+      - flights_db:/var/lib/mysql
+
 volumes:
   auth_db:
+  flights_db:
