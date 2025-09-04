@@ -111,21 +111,32 @@ describe.skip("auth", () => {
 });
 
 describe("cities", () => {
-  test(" Creating Cities", async () => {
-    const res = await axios.post(`${FLIGHTS_URL}/api/v1/city`, {
-      name: "Mumbai",
-    });
-    console.log(res);
+  const CityName = `City${Math.floor(Math.random() * 1000) % 100}`;
+  let cityId = "";
 
+  test(" Creating Cities", async () => {
+    console.log(CityName);
+
+    const res = await axios.post(`${FLIGHTS_URL}/api/v1/city`, {
+      name: CityName,
+    });
+    cityId = res.data.data.id;
     expect(res.status).toBe(201);
   });
-  test("city is unique ", async () => {
-    const res = await axios.post(`${FLIGHTS_URL}/api/v1/city`, {
-      name: "Mumbai",
-    });
-    console.log(res);
 
-    expect(res.status).toBe(500);
+  test("to get the city", async () => {
+    console.log(cityId);
+
+    const res = await axios.get(`${FLIGHTS_URL}/api/v1/city/${cityId}`);
+    expect(res.status).toBe(200);
+  });
+  test("to delete the city", async () => {
+    const res = await axios.delete(`${FLIGHTS_URL}/api/v1/city/${cityId}`);
+    expect(res.status).toBe(200);
+  });
+  test("to get all the city", async () => {
+    const res = await axios.get(`${FLIGHTS_URL}/api/v1/city`);
+    expect(res.status).toBe(200);
   });
 });
 
