@@ -65,16 +65,3 @@ class FlightService {
 }
 
 module.exports = FlightService;
-
-/**
- * {
- *   flightNumber,
- *  airplaneId ,
- *   departureAirportId,
- *   arrivalAirportId,
- *   arrivalTime,
- *   departureTime,
- *   price
- *   totalSeats -> airplane
- * }
- */

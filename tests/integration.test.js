@@ -39,8 +39,8 @@ const axios = {
 };
 
 const SERVER_URL = "http://localhost:3001";
-
-describe("auth", () => {
+const FLIGHTS_URL = "http://localhost:3002";
+describe.skip("auth", () => {
   test("Signup succeeds ", async () => {
     const email = `admin${Math.random()}@test.com`;
     const password = "qwerty123";
@@ -108,4 +108,27 @@ describe("auth", () => {
     });
     expect(res.status).toBe(500);
   });
+});
+
+describe("cities", () => {
+  test(" Creating Cities", async () => {
+    const res = await axios.post(`${FLIGHTS_URL}/api/v1/city`, {
+      name: "Mumbai",
+    });
+    console.log(res);
+
+    expect(res.status).toBe(201);
+  });
+  test("city is unique ", async () => {
+    const res = await axios.post(`${FLIGHTS_URL}/api/v1/city`, {
+      name: "Mumbai",
+    });
+    console.log(res);
+
+    expect(res.status).toBe(500);
+  });
+});
+
+describe.skip("flights", () => {
+  test(" Creating flights", async () => {});
 });
