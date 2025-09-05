@@ -91,10 +91,32 @@ const update = async (req, res) => {
     });
   }
 };
+const destroy = async (req, res) => {
+  try {
+    const response = await flightService.deleteFlight(req.params.id);
+    console.log(response);
+
+    return res.status(successCodes.OK).json({
+      data: response,
+      success: true,
+      err: {},
+      message: "Successfully deleted flight",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      data: {},
+      sucess: false,
+      message: "couldnt deleted flight",
+      err: { error },
+    });
+  }
+};
 
 module.exports = {
   create,
   getAll,
   get,
   update,
+  destroy,
 };

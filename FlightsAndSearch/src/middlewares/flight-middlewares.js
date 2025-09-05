@@ -2,13 +2,13 @@ const { ClientErrorCodes } = require("../utils/error-codes");
 
 const validateCreateFlight = (req, res, next) => {
   if (
-    req.body.flightNumber ||
-    req.body.airplaneId ||
-    req.body.departureAirportID ||
-    req.body.arrivalAirportId ||
-    req.body.arrivalTime ||
-    req.body.departureTime ||
-    req.body.price
+    !req.body.flightNumber ||
+    !req.body.airplaneId ||
+    !req.body.departureAirportID ||
+    !req.body.arrivalAirportId ||
+    !req.body.arrivalTime ||
+    !req.body.departureTime ||
+    !req.body.price
   ) {
     return res.status(ClientErrorCodes.Bad_Request).json({
       data: {},
