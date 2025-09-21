@@ -26,7 +26,32 @@ services:
       - "3307:3306"
     volumes:
       - flights_db:/var/lib/mysql
-
+  booking_db:
+    image: mysql:8.0
+    container_name: booking_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: airbourne
+      MYSQL_DATABASE: booking
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: airbourneisbest
+    ports:
+      - "3308:3306"
+    volumes:
+        - booking_db:/var/lib/mysql
+  rabbitmq:
+      image: rabbitmq:3.13-management  
+      container_name: rabbitmq
+      ports:
+        - "5672:5672"
+        - "15672:15672" 
+      environment:
+        RABBITMQ_DEFAULT_USER: admin
+        RABBITMQ_DEFAULT_PASS: admin
+      volumes:
+        - rabbitmq_data:/var/lib/rabbitmq
 volumes:
   auth_db:
   flights_db:
+  booking_db:
+  rabbitmq_data:
