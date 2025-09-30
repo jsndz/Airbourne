@@ -5,9 +5,9 @@ const {StatusCodes} = require('http-status-codes');
 class BookingRepository{
 
 
-    async create( data){
+    async create(data,t){
         try {
-            const booking = await Booking.create(data);
+            const booking = await Booking.create(data,{transaction:t})
             return booking;
         } catch (error) {
             if(error.name=='SequelizeValidationError'){
@@ -22,13 +22,13 @@ class BookingRepository{
         }
     }
 
-    async update(bookingId, data){
+    async update(bookingId, data,t){
         try {
-            const booking = await Booking.findByPk(bookingId);
+            const booking = await Booking.findByPk(bookingId,{transaction:t});
             if(data.status){
                 booking.status = data.status;
             }
-            await booking.save();
+            await booking.save({transaction:t});
             return booking;
         } catch (error) {
             throw new AppError(

@@ -6,8 +6,7 @@ const {BookingController} = require('../../controllers/index')
 const { createChannel } = require('../../utils/messagequeue')
 
 const channel = await createChannel();
-const BookingController = new BookingController(channel);
-const bookingController = new BookingController();
+const bookingController = new BookingController(channel);
 
 router.get('/info',(req,res)=>{
     return res.json({message:'Response from routes'})
