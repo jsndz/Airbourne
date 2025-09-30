@@ -14,7 +14,7 @@ const create = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return req.status(500).json({
+    return res.status(500).json({
       data: {},
       sucess: false,
       message: "couldnt create a city",

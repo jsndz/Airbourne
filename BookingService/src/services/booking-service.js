@@ -3,6 +3,7 @@ const axios = require('axios');
 const {BookingRepository} = require('../repository/index');
 const {FLIGHT_SERVICE_PATH} = require('../config/serverConfig');
 const {ServiceError} = require('../utils/error/index');
+const { sequelize } = require('../models');
 class BookingService {
     constructor(){
         this.bookingRepository = new BookingRepository();
@@ -32,11 +33,13 @@ class BookingService {
 
         } catch (error) {
             await t.rollback();
-            if(error.name == 'ValidationError' || error.name == 'repositoryERROR'){
-                throw error;
-            }
-            throw new ServiceError();
+            console.error("BookingService Error:", error)
+            throw new ServiceError(
+                'Unable to create booking',
+                `Original error: ${error.message}`,
+            );
         }
+
         
     }
 }

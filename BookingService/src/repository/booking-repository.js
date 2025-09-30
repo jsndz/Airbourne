@@ -15,7 +15,7 @@ class BookingRepository{
             }
             throw new AppError(
                 'repository ERROR',
-                'Cannot create Booking',
+                'Cannot create Booking'+error,
                 'there was issue in booking',
                 StatusCodes.INTERNAL_SERVER_ERROR
             );

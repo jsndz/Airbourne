@@ -48,7 +48,9 @@ const axios = {
 
 const SERVER_URL = "http://localhost:3001";
 const FLIGHTS_URL = "http://localhost:3002";
-describe.skip("auth", () => {
+const BOOKING_URL = "http://localhost:3003";
+
+describe("auth", () => {
   test("Signup succeeds ", async () => {
     const email = `admin${Math.random()}@test.com`;
     const password = "qwerty123";
@@ -99,7 +101,6 @@ describe.skip("auth", () => {
       password,
     });
     expect(res.status).toBe(200);
-    console.log(res.data);
 
     expect(res.data).toBeDefined();
   });
@@ -123,7 +124,6 @@ describe("cities", () => {
   let cityId = "";
 
   test(" Creating Cities", async () => {
-    console.log(CityName);
 
     const res = await axios.post(`${FLIGHTS_URL}/api/v1/city`, {
       name: CityName,
@@ -133,7 +133,6 @@ describe("cities", () => {
   });
 
   test("to get the city", async () => {
-    console.log(cityId);
 
     const res = await axios.get(`${FLIGHTS_URL}/api/v1/city/${cityId}`);
     expect(res.status).toBe(200);
@@ -233,7 +232,6 @@ describe("flights", () => {
       flightRequestBody
     );
     flightId = res.data.data.id;
-    console.log(res.data);
 
     expect(res.status).toBe(201);
     expect(res.data.data.flightNumber).toBe(flightRequestBody.flightNumber);
@@ -253,7 +251,6 @@ describe("flights", () => {
 
   test("Delete flight", async () => {
     const res = await axios.delete(`${FLIGHTS_URL}/api/v1/flights/${flightId}`);
-    console.log(res.data);
 
     expect(res.status).toBe(200);
   });
@@ -315,13 +312,103 @@ describe("airports", () => {
     const res = await axios.delete(
       `${FLIGHTS_URL}/api/v1/airports/${airportId}`
     );
-    console.log(res.data);
 
     expect(res.status).toBe(200);
   });
 });
+describe("Booking routes", () => {
+  let bookingId = "";
+  let flightId = "";
+  let userId = "";
 
+  let city1Id = "";
+  let city2Id = "";
+  let departureAirportId = "";
+  let arrivalAirportId = "";
+  let airplaneId = "";
 
-describe("",()=>{
-  
-})
+  beforeAll(async () => {
+    const city1 = await axios.post(`${FLIGHTS_URL}/api/v1/city`, {
+      name: `City${Math.floor(Math.random() * 1000)}`,
+    });
+    city1Id = city1.data.data.id;
+
+    const city2 = await axios.post(`${FLIGHTS_URL}/api/v1/city`, {
+      name: `City${Math.floor(Math.random() * 1000)}`,
+    });
+    city2Id = city2.data.data.id;
+
+    const depAirport = await axios.post(`${FLIGHTS_URL}/api/v1/airports`, {
+      name: `DepAirport${Math.floor(Math.random() * 1000)}`,
+      address: "Dep Address",
+      cityId: city1Id,
+    });
+    departureAirportId = depAirport.data.data.id;
+
+    const arrAirport = await axios.post(`${FLIGHTS_URL}/api/v1/airports`, {
+      name: `ArrAirport${Math.floor(Math.random() * 1000)}`,
+      address: "Arr Address",
+      cityId: city2Id,
+    });
+    arrivalAirportId = arrAirport.data.data.id;
+
+    const airplane = await axios.post(`${FLIGHTS_URL}/api/v1/airplane`, {
+      modelNumber: `Boeing${Math.floor(Math.random() * 1000)}`,
+      capacity: 180,
+    });
+    airplaneId = airplane.data.data.id;
+
+    const flightRequestBody = {
+      flightNumber: `FN${Math.floor(Math.random() * 1000)}`,
+      airplaneId,
+      departureAirportID: departureAirportId,
+      arrivalAirportId: arrivalAirportId,
+      departureTime: "2025-09-06T10:00:00Z",
+      arrivalTime: "2025-09-06T12:00:00Z",
+      price: 5000,
+    };
+
+    const flight = await axios.post(`${FLIGHTS_URL}/api/v1/flights`, flightRequestBody);
+    flightId = flight.data.data.id;
+
+    const email = `user${Math.floor(Math.random() * 1000)}@test.com`;
+    const password = "password123";
+
+    await axios.post(`${SERVER_URL}/api/v1/signup`, { email, password });
+    const userRes = await axios.post(`${SERVER_URL}/api/v1/signin`, { email, password });
+    userId = userRes.data.data.id || 1; 
+    
+  });
+
+  test("GET /info returns message", async () => {
+    const res = await axios.get(`${BOOKING_URL}/api/v1/info`);
+    expect(res.status).toBe(200);
+    expect(res.data.message).toBe("Response from routes");
+  });
+
+  test("POST /bookings creates a booking", async () => {
+    const bookingPayload = {
+      flightId,
+      userId,
+      NoOfSeats: 2,
+      totalCost: 10000,
+      status: "InProcess",
+    };
+
+    const res = await axios.post(`${BOOKING_URL}/api/v1/bookings`, bookingPayload);
+
+    bookingId = res.data.data?.id;
+
+    expect(res.status).toBe(200);
+    expect(res.data.success).toBe(true);
+    expect(res.data.data.flightId).toBe(flightId);
+    expect(res.data.data.userId).toBe(userId);
+  });
+
+  test("POST /publish sends a booking message to the queue", async () => {
+    const res = await axios.post(`${BOOKING_URL}/api/v1/publish`, {});
+
+    expect(res.status).toBe(201);
+    expect(res.data.message).toBe("Successfully completed  publishing");
+  });
+});
