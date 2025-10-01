@@ -412,3 +412,26 @@ describe("Booking routes", () => {
     expect(res.data.message).toBe("Successfully completed  publishing");
   });
 });
+const NOTIFICATION_URL = "http://localhost:3004"
+describe("tickets", () => {
+  let ticketId = "";
+
+  test("Create ticket", async () => {
+    const ticketPayload = {
+      subject: "Flight Reminder",
+      content: "Your flight is scheduled tomorrow at 10 AM",
+      recepientEmail: `user${Math.floor(Math.random() * 1000)}@test.com`,
+      status: "PENDING",
+      notificationTime: new Date(Date.now() + 3600000).toISOString()
+    };
+
+    const res = await axios.post(`${NOTIFICATION_URL}/api/v1/tickets`, ticketPayload);
+
+    ticketId = res.data.data.id;
+
+    expect(res.status).toBe(201);
+    expect(res.data.sucess).toBe(true);
+    expect(res.data.data.subject).toBe(ticketPayload.subject);
+    expect(res.data.data.status).toBe("PENDING");
+  });
+});
