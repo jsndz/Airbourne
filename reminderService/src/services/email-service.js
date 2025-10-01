@@ -11,7 +11,7 @@ const sendBasicEmail = (mailFrom,mailTo,mailSubject,mailBody)=>{
     })
 }
 
-const fetchPendingEmails = async (timestamp) => {
+const fetchPendingEmails = async () => {
     try {
         const response = await repo.get({status: "PENDING"});
         return response;

@@ -26,9 +26,3 @@ const setUpJobs = () => {
 
 module.exports = setUpJobs;
 
-// emailService.sendBasicEmail(
-//   "reminderService.airline.com",
-  // email.recepientEmail,
-  // email.subject,
-  // email.content
-//   );

@@ -12,9 +12,9 @@ const createChannel = async () => {
     }
 }
 
-const subscribeMessage = async (channel, service, binding_key) => {
+const subscribeMessage = async (channel,QUEUE_NAME, service, binding_key) => {
     try {
-        const applicationQueue = await channel.assertQueue('QUEUE_NAME');
+        const applicationQueue = await channel.assertQueue(QUEUE_NAME);
 
         channel.bindQueue(applicationQueue.queue, EXCHANGE_NAME,binding_key);
 
@@ -22,24 +22,13 @@ const subscribeMessage = async (channel, service, binding_key) => {
             console.log('recieved data');
             console.log(msg.content.toString());
             const payload = JSON.parse(msg.content.toString());
-            
             service(payload);
-            
             channel.ack(msg);
         });
     } catch (error) {
         throw error;
     }
 
-}
-
-const publishmessage = async (channel,binding_key, message) => {
-    try {
-        await channel.assertQueue('QUEUE_NAME');
-        await channel.publish(EXCHANGE_NAME,binding_key,Buffer.from(message))
-    } catch (error) {
-        throw error;
-    }
 }
 module.exports = {
     createChannel,
