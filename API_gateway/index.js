@@ -29,7 +29,7 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: "No token provided" });
     }
 
-    const response = await axios.get("http://localhost:3001/api/v1/isauthenticated", {
+    const response = await axios.get(`${process.env.AUTH_URL}/api/v1/isauthenticated`, {
       headers: { "x-access-token": token },
     });
 
@@ -40,11 +40,11 @@ const authMiddleware = async (req, res, next) => {
     }
   } catch (error) {
     return res.status(401).json({ message: "Authorization error" });
-  }
+  } 
 };
 
 const bookingServiceProxy = createProxyMiddleware({
-  target: "http://localhost:3002",
+  target: `${process.env.SERVICE_URL}`,
   changeOrigin: true,
   pathRewrite: { "^/bookingservice": "" }, 
 });

@@ -1,4 +1,9 @@
+networks:
+  k6:
+  grafana:
+
 services:
+  
   auth_db:
     image: mysql:8.0
     container_name: auth_db
@@ -63,9 +68,81 @@ services:
         RABBITMQ_DEFAULT_PASS: admin
       volumes:
         - rabbitmq_data:/var/lib/rabbitmq
+  influxdb:
+    image: influxdb:1.8
+#    entrypoint: /bin/sh
+#    user: root
+    networks:
+      - k6
+      - grafana
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=k6
+
+  grafana:
+    image: grafana/grafana:8.5.21
+#    entrypoint: /bin/sh
+#    user: root
+    networks:
+      - grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_BASIC_ENABLED=false
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    volumes:
+      - ./dashboards:/var/lib/grafana/dashboards
+      - ./grafana-dashboard.yaml:/etc/grafana/provisioning/dashboards/dashboard.yaml
+      - ./grafana-datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+
+  k6:
+    image: grafana/k6:latest
+#    entrypoint: /bin/sh
+#    user: root
+    networks:
+      - k6
+    ports:
+      - "6565:6565"
+    environment:
+      - K6_OUT=influxdb=http://influxdb:8086/k6
+    volumes:
+      - ./tests/booking_load_test.js:/tests/booking_load_test.js
+      - ./tests/health_load.js:/tests/health_load.js
+
+
+  api-gateway:
+    build: ./API_gateway
+    ports:
+      - "3005:3005"
+
+  auth-service:
+    build: ./Auth_service
+    ports:
+      - "3001:3001"
+
+  booking-service:
+    build: ./BookingService
+    ports:
+      - "3003:3003"
+
+  flights-service:
+    build: ./FlightsAndSearch
+    ports:
+      - "3002:3002"
+
+  reminder-service:
+    build: ./reminderService
+    ports:
+      - "3004:3004"
+
+
 volumes:
   auth_db:
   flights_db:
   booking_db:
   rabbitmq_data:
   notification_db:
+
