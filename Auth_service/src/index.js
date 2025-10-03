@@ -9,21 +9,35 @@ const { swaggerUi, swaggerSpec } = require("./config/swagger");
 const app = express();
 
 const prepareAndstartServer = () => {
+
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
+
+
   app.use("/api", ApiRoutes);
+
   app.get("/health", (req, res) => {
     res.send({
       message: "working",
       success: true,
     });
   });
-  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+  // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
   app.listen(PORT, async () => {
-    console.log(`server Started On Port :${PORT}`);
-    if (process.env.DB_SYNC) {
-      db.sequelize.sync({ alter: true });
+    console.log(`Server started on port: ${PORT}`);
+
+    try {
+      await db.sequelize.authenticate();
+
+      if (DB_SYNC) {
+        await db.sequelize.sync({ force: true });
+      }
+    } catch (err) {
+      console.error("Database connection failed:", err.message);
+      console.error(err); 
+      process.exit(1); 
     }
   });
 };
