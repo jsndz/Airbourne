@@ -1,6 +1,3 @@
-networks:
-  k6:
-  grafana:
 
 services:
   auth_db:
@@ -71,9 +68,7 @@ services:
     image: influxdb:1.8
 #    entrypoint: /bin/sh
 #    user: root
-    networks:
-      - k6
-      - grafana
+    
     ports:
       - "8086:8086"
     environment:
@@ -83,8 +78,7 @@ services:
     image: grafana/grafana:8.5.21
 #    entrypoint: /bin/sh
 #    user: root
-    networks:
-      - grafana
+    
     ports:
       - "3000:3000"
     environment:
@@ -97,45 +91,75 @@ services:
       - ./grafana-dashboard.yaml:/etc/grafana/provisioning/dashboards/dashboard.yaml
       - ./grafana-datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
 
-  k6:
-    image: grafana/k6:latest
-#    entrypoint: /bin/sh
-#    user: root
-    networks:
-      - k6
-    ports:
-      - "6565:6565"
-    environment:
-      - K6_OUT=influxdb=http://influxdb:8086/k6
-    volumes:
-      - ./tests/booking_load_test.js:/tests/booking_load_test.js
-      - ./tests/health_load.js:/tests/health_load.js
 
-
+    
   api-gateway:
     build: ./API_gateway
     ports:
       - "3005:3005"
+    depends_on:
+      - auth-service
+      - booking-service
+      - flights-service
+      - reminder-service
+
 
   auth-service:
     build: ./Auth_service
     ports:
       - "3001:3001"
+    depends_on:
+      - auth_db
+      - rabbitmq
+
 
   booking-service:
     build: ./BookingService
     ports:
       - "3003:3003"
+    depends_on:
+      - booking_db
+      - flights_db
+      - rabbitmq
+  
 
   flights-service:
     build: ./FlightsAndSearch
     ports:
       - "3002:3002"
+    depends_on:
+      - flights_db
+      - rabbitmq
+ 
 
   reminder-service:
     build: ./reminderService
     ports:
       - "3004:3004"
+
+    depends_on:
+      - notification_db
+      - rabbitmq
+
+  k6:
+    image: grafana/k6:latest
+#    entrypoint: /bin/sh
+#    user: root
+    
+    ports:
+      - "6565:6565"
+    environment:
+      - K6_OUT=influxdb=http://influxdb:8086/k6
+    command: run /tests/booking_load_test.js
+    volumes:
+      - ./tests/booking_load_test.js:/tests/booking_load_test.js
+      - ./tests/health_load.js:/tests/health_load.js
+    depends_on:
+      - auth-service
+      - flights-service
+      - booking-service
+      - api-gateway
+
 
 
 volumes:

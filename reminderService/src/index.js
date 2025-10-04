@@ -18,7 +18,7 @@ const setUpServer = async () => {
 
     const channel = await createChannel();
     subscribeMessage(channel,'notification_queue',EmailService.subscribeEvents,REMINDER_BINDING_KEY);
-
+  
     app.use('/api/v1/tickets',TicketController.create);
 
     app.listen(PORT,() => {

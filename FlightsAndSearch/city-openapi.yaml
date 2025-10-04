@@ -1,0 +1,162 @@
+openapi: 3.0.3
+info:
+  title: City Service API
+  version: 1.0.0
+  description: API for managing cities (CRUD operations).
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+paths:
+  /city:
+    get:
+      summary: Get all cities
+      description: Retrieve all cities or filter by name.
+      parameters:
+        - name: name
+          in: query
+          description: Filter cities starting with this name
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of cities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/City'
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  err:
+                    type: object
+    post:
+      summary: Create a new city
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCityRequest'
+      responses:
+        '201':
+          description: City successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CityResponse'
+        '500':
+          description: Server error
+
+  /city/{id}:
+    get:
+      summary: Get a city by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: City retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CityResponse'
+        '404':
+          description: City not found
+    patch:
+      summary: Update a city
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCityRequest'
+      responses:
+        '200':
+          description: City updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CityResponse'
+    delete:
+      summary: Delete a city
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: City deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  err:
+                    type: object
+        '404':
+          description: City not found
+
+components:
+  schemas:
+    City:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "New York"
+    CreateCityRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: "Paris"
+    UpdateCityRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Berlin"
+    CityResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/City'
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Successfully got a city
+        err:
+          type: object
+          example: {}

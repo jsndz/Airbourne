@@ -1,0 +1,247 @@
+openapi: 3.0.3
+info:
+  title: Flights Service API
+  version: 1.0.0
+  description: API specification for managing flights
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local server
+
+paths:
+  /flights:
+    post:
+      summary: Create a new flight
+      tags: [Flights]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FlightCreate"
+      responses:
+        "201":
+          description: Flight created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlightResponse"
+        "400":
+          description: Invalid input
+        "500":
+          description: Server error
+    get:
+      summary: Get all flights
+      tags: [Flights]
+      parameters:
+        - in: query
+          name: arrivalAirportId
+          schema:
+            type: integer
+          description: Filter by arrival airport ID
+        - in: query
+          name: departureAirportID
+          schema:
+            type: integer
+          description: Filter by departure airport ID
+        - in: query
+          name: minPrice
+          schema:
+            type: integer
+          description: Minimum ticket price
+        - in: query
+          name: maxPrice
+          schema:
+            type: integer
+          description: Maximum ticket price
+      responses:
+        "200":
+          description: List of flights
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Flight"
+        "500":
+          description: Server error
+
+  /flights/{id}:
+    get:
+      summary: Get a flight by ID
+      tags: [Flights]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Flight retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flight"
+        "404":
+          description: Flight not found
+        "500":
+          description: Server error
+
+    patch:
+      summary: Update a flight by ID
+      tags: [Flights]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FlightUpdate"
+      responses:
+        "200":
+          description: Flight updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flight"
+        "404":
+          description: Flight not found
+        "500":
+          description: Server error
+
+    delete:
+      summary: Delete a flight by ID
+      tags: [Flights]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Flight deleted successfully
+        "404":
+          description: Flight not found
+        "500":
+          description: Server error
+
+components:
+  schemas:
+    FlightCreate:
+      type: object
+      required:
+        - flightNumber
+        - airplaneId
+        - departureAirportID
+        - arrivalAirportId
+        - arrivalTime
+        - departureTime
+        - price
+      properties:
+        flightNumber:
+          type: string
+          example: AI202
+        airplaneId:
+          type: integer
+          example: 1
+        departureAirportID:
+          type: integer
+          example: 101
+        arrivalAirportId:
+          type: integer
+          example: 202
+        arrivalTime:
+          type: string
+          format: date-time
+          example: 2025-10-05T12:30:00Z
+        departureTime:
+          type: string
+          format: date-time
+          example: 2025-10-05T09:00:00Z
+        price:
+          type: integer
+          example: 5000
+        boardingGate:
+          type: string
+          example: A12
+
+    FlightUpdate:
+      type: object
+      properties:
+        flightNumber:
+          type: string
+        airplaneId:
+          type: integer
+        departureAirportID:
+          type: integer
+        arrivalAirportId:
+          type: integer
+        arrivalTime:
+          type: string
+          format: date-time
+        departureTime:
+          type: string
+          format: date-time
+        price:
+          type: integer
+        boardingGate:
+          type: string
+        totalSeats:
+          type: integer
+
+    Flight:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        flightNumber:
+          type: string
+          example: AI202
+        airplaneId:
+          type: integer
+          example: 1
+        departureAirportID:
+          type: integer
+          example: 101
+        arrivalAirportId:
+          type: integer
+          example: 202
+        arrivalTime:
+          type: string
+          format: date-time
+          example: 2025-10-05T12:30:00Z
+        departureTime:
+          type: string
+          format: date-time
+          example: 2025-10-05T09:00:00Z
+        price:
+          type: integer
+          example: 5000
+        boardingGate:
+          type: string
+          example: A12
+        totalSeats:
+          type: integer
+          example: 180
+
+    FlightResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Flight"
+        success:
+          type: boolean
+          example: true
+        err:
+          type: object
+        message:
+          type: string
+          example: Successfully created a flight

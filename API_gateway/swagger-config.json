@@ -1,0 +1,18 @@
+{
+  "swagger": "3.0",
+  "info": {
+    "title": "Airbourne API Gateway",
+    "version": "1.0.0"
+  },
+
+  "apis": [
+    { "url": "../Auth_service/auth-service-openapi.yaml", "paths": { "prefix": "/auth" } },
+    { "url": "../BookingService/booking-service-openapi.yaml", "paths": { "prefix": "/booking" } },
+    { "url": "../FlightsAndSearch/flights-openapi.yaml", "paths": { "prefix": "/flights" } },
+    { "url": "../FlightsAndSearch/airport-openapi.yaml", "paths": { "prefix": "/airports" } },
+    { "url": "../FlightsAndSearch/airplane-openapi.yaml", "paths": { "prefix": "/airplanes" } },
+    { "url": "../FlightsAndSearch/city-openapi.yaml", "paths": { "prefix": "/cities" } },
+    { "url": "../reminderService/reminder-service.yaml", "paths": { "prefix": "/reminder" } }
+  ]
+
+}

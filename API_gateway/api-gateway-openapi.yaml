@@ -1,0 +1,1244 @@
+swagger: '3.0'
+info:
+  title: Airbourne API Gateway
+  version: 1.0.0
+paths:
+  /signup:
+    post:
+      summary: User signup
+      description: Register a new user with email and password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: test@example.com
+                password:
+                  type: string
+                  minLength: 4
+                  maxLength: 50
+                  example: secret123
+      responses:
+        '201':
+          description: User created
+        '400':
+          description: Validation error
+        '500':
+          description: Server error
+      security:
+        - AccessToken: []
+  /signin:
+    post:
+      summary: User signin
+      description: Authenticate with email and password and receive a JWT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: test@example.com
+                password:
+                  type: string
+                  example: secret123
+      responses:
+        '200':
+          description: Successfully signed in (JWT returned)
+        '401':
+          description: Invalid credentials
+        '500':
+          description: Server error
+      security:
+        - AccessToken: []
+  /isAuthenticated:
+    get:
+      summary: Verify authentication
+      description: Check if a user token is valid and return user ID if authenticated.
+      parameters:
+        - in: header
+          name: x-access-token
+          required: true
+          schema:
+            type: string
+          description: JWT access token
+      responses:
+        '200':
+          description: Token valid
+        '401':
+          description: Invalid or missing token
+      security:
+        - AccessToken: []
+  /isAdmin:
+    get:
+      summary: Verify admin role
+      description: Checks if the user is an admin.
+      parameters:
+        - in: header
+          name: x-access-token
+          required: true
+          schema:
+            type: string
+          description: JWT access token
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: User ID to check admin role
+      responses:
+        '200':
+          description: User is admin
+        '401':
+          description: Unauthorized
+        '403':
+          description: User is not admin
+      security:
+        - AccessToken: []
+  /dummy:
+    get:
+      summary: Dummy endpoint
+      description: Returns a static OK response (for testing).
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: OK
+      security:
+        - AccessToken: []
+  /bookings:
+    post:
+      summary: Create a booking
+      description: >
+        Creates a new booking transactionally.   Validates seat availability
+        from Flight Service, calculates cost, persists booking, and updates
+        flight seat count.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - flightId
+                - userId
+                - NoOfSeats
+              properties:
+                flightId:
+                  type: integer
+                  example: 101
+                userId:
+                  type: integer
+                  example: 202
+                NoOfSeats:
+                  type: integer
+                  minimum: 1
+                  example: 2
+      responses:
+        '200':
+          description: Booking successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      flightId:
+                        type: integer
+                        example: 101
+                      userId:
+                        type: integer
+                        example: 202
+                      status:
+                        type: string
+                        enum:
+                          - InProcess
+                          - Booked
+                          - Cancelled
+                        example: Booked
+                      NoOfSeats:
+                        type: integer
+                        example: 2
+                      totalCost:
+                        type: number
+                        example: 10000
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: Successfully completed booking
+        '400':
+          description: Validation error or insufficient seats
+        '500':
+          description: Internal server error
+  /publish:
+    post:
+      summary: Publish booking message
+      description: >
+        Publishes a notification message to the Reminder Queue.   This can be
+        used for email/SMS notifications regarding booking.
+      responses:
+        '201':
+          description: Message successfully published
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Successfully completed publishing
+        '503':
+          description: Service unavailable (channel not ready)
+  /info:
+    get:
+      summary: Info endpoint
+      description: Returns metadata about Booking Service routes.
+      responses:
+        '200':
+          description: Info response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Response from routes
+  /flights:
+    post:
+      summary: Create a new flight
+      tags:
+        - Flights
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - flightNumber
+                - airplaneId
+                - departureAirportID
+                - arrivalAirportId
+                - arrivalTime
+                - departureTime
+                - price
+              properties:
+                flightNumber:
+                  type: string
+                  example: AI202
+                airplaneId:
+                  type: integer
+                  example: 1
+                departureAirportID:
+                  type: integer
+                  example: 101
+                arrivalAirportId:
+                  type: integer
+                  example: 202
+                arrivalTime:
+                  type: string
+                  format: date-time
+                  example: 2025-10-05T12:30:00.000Z
+                departureTime:
+                  type: string
+                  format: date-time
+                  example: 2025-10-05T09:00:00.000Z
+                price:
+                  type: integer
+                  example: 5000
+                boardingGate:
+                  type: string
+                  example: A12
+      responses:
+        '201':
+          description: Flight created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      flightNumber:
+                        type: string
+                        example: AI202
+                      airplaneId:
+                        type: integer
+                        example: 1
+                      departureAirportID:
+                        type: integer
+                        example: 101
+                      arrivalAirportId:
+                        type: integer
+                        example: 202
+                      arrivalTime:
+                        type: string
+                        format: date-time
+                        example: 2025-10-05T12:30:00.000Z
+                      departureTime:
+                        type: string
+                        format: date-time
+                        example: 2025-10-05T09:00:00.000Z
+                      price:
+                        type: integer
+                        example: 5000
+                      boardingGate:
+                        type: string
+                        example: A12
+                      totalSeats:
+                        type: integer
+                        example: 180
+                  success:
+                    type: boolean
+                    example: true
+                  err:
+                    type: object
+                  message:
+                    type: string
+                    example: Successfully created a flight
+        '400':
+          description: Invalid input
+        '500':
+          description: Server error
+    get:
+      summary: Get all flights
+      tags:
+        - Flights
+      parameters:
+        - in: query
+          name: arrivalAirportId
+          schema:
+            type: integer
+          description: Filter by arrival airport ID
+        - in: query
+          name: departureAirportID
+          schema:
+            type: integer
+          description: Filter by departure airport ID
+        - in: query
+          name: minPrice
+          schema:
+            type: integer
+          description: Minimum ticket price
+        - in: query
+          name: maxPrice
+          schema:
+            type: integer
+          description: Maximum ticket price
+      responses:
+        '200':
+          description: List of flights
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    flightNumber:
+                      type: string
+                      example: AI202
+                    airplaneId:
+                      type: integer
+                      example: 1
+                    departureAirportID:
+                      type: integer
+                      example: 101
+                    arrivalAirportId:
+                      type: integer
+                      example: 202
+                    arrivalTime:
+                      type: string
+                      format: date-time
+                      example: 2025-10-05T12:30:00.000Z
+                    departureTime:
+                      type: string
+                      format: date-time
+                      example: 2025-10-05T09:00:00.000Z
+                    price:
+                      type: integer
+                      example: 5000
+                    boardingGate:
+                      type: string
+                      example: A12
+                    totalSeats:
+                      type: integer
+                      example: 180
+        '500':
+          description: Server error
+  /flights/{id}:
+    get:
+      summary: Get a flight by ID
+      tags:
+        - Flights
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Flight retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  flightNumber:
+                    type: string
+                    example: AI202
+                  airplaneId:
+                    type: integer
+                    example: 1
+                  departureAirportID:
+                    type: integer
+                    example: 101
+                  arrivalAirportId:
+                    type: integer
+                    example: 202
+                  arrivalTime:
+                    type: string
+                    format: date-time
+                    example: 2025-10-05T12:30:00.000Z
+                  departureTime:
+                    type: string
+                    format: date-time
+                    example: 2025-10-05T09:00:00.000Z
+                  price:
+                    type: integer
+                    example: 5000
+                  boardingGate:
+                    type: string
+                    example: A12
+                  totalSeats:
+                    type: integer
+                    example: 180
+        '404':
+          description: Flight not found
+        '500':
+          description: Server error
+    patch:
+      summary: Update a flight by ID
+      tags:
+        - Flights
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                flightNumber:
+                  type: string
+                airplaneId:
+                  type: integer
+                departureAirportID:
+                  type: integer
+                arrivalAirportId:
+                  type: integer
+                arrivalTime:
+                  type: string
+                  format: date-time
+                departureTime:
+                  type: string
+                  format: date-time
+                price:
+                  type: integer
+                boardingGate:
+                  type: string
+                totalSeats:
+                  type: integer
+      responses:
+        '200':
+          description: Flight updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  flightNumber:
+                    type: string
+                    example: AI202
+                  airplaneId:
+                    type: integer
+                    example: 1
+                  departureAirportID:
+                    type: integer
+                    example: 101
+                  arrivalAirportId:
+                    type: integer
+                    example: 202
+                  arrivalTime:
+                    type: string
+                    format: date-time
+                    example: 2025-10-05T12:30:00.000Z
+                  departureTime:
+                    type: string
+                    format: date-time
+                    example: 2025-10-05T09:00:00.000Z
+                  price:
+                    type: integer
+                    example: 5000
+                  boardingGate:
+                    type: string
+                    example: A12
+                  totalSeats:
+                    type: integer
+                    example: 180
+        '404':
+          description: Flight not found
+        '500':
+          description: Server error
+    delete:
+      summary: Delete a flight by ID
+      tags:
+        - Flights
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Flight deleted successfully
+        '404':
+          description: Flight not found
+        '500':
+          description: Server error
+  /airports:
+    get:
+      summary: Get all airports
+      description: Retrieve all airports.
+      responses:
+        '200':
+          description: A list of airports
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: Kempegowda International Airport
+                        address:
+                          type: string
+                          example: Devanahalli, Bengaluru, Karnataka
+                        cityId:
+                          type: integer
+                          example: 101
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  err:
+                    type: object
+    post:
+      summary: Create a new airport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - cityId
+              properties:
+                name:
+                  type: string
+                  example: Chhatrapati Shivaji International Airport
+                address:
+                  type: string
+                  example: Mumbai, Maharashtra
+                cityId:
+                  type: integer
+                  example: 102
+      responses:
+        '201':
+          description: Airport successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: Kempegowda International Airport
+                      address:
+                        type: string
+                        example: Devanahalli, Bengaluru, Karnataka
+                      cityId:
+                        type: integer
+                        example: 101
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully got an airport
+                  err:
+                    type: object
+                    example: {}
+        '500':
+          description: Server error
+  /airports/{id}:
+    get:
+      summary: Get an airport by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Airport retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: Kempegowda International Airport
+                      address:
+                        type: string
+                        example: Devanahalli, Bengaluru, Karnataka
+                      cityId:
+                        type: integer
+                        example: 101
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully got an airport
+                  err:
+                    type: object
+                    example: {}
+        '404':
+          description: Airport not found
+    patch:
+      summary: Update an airport
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Indira Gandhi International Airport
+                address:
+                  type: string
+                  example: New Delhi, India
+                cityId:
+                  type: integer
+                  example: 103
+      responses:
+        '200':
+          description: Airport updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: Kempegowda International Airport
+                      address:
+                        type: string
+                        example: Devanahalli, Bengaluru, Karnataka
+                      cityId:
+                        type: integer
+                        example: 101
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully got an airport
+                  err:
+                    type: object
+                    example: {}
+    delete:
+      summary: Delete an airport
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Airport deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  err:
+                    type: object
+        '404':
+          description: Airport not found
+  /airplane:
+    get:
+      summary: Get all airplanes
+      description: Retrieve all airplanes.
+      responses:
+        '200':
+          description: A list of airplanes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        modelNumber:
+                          type: string
+                          example: A320
+                        capacity:
+                          type: integer
+                          example: 180
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  err:
+                    type: object
+    post:
+      summary: Create a new airplane
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - modelNumber
+                - capacity
+              properties:
+                modelNumber:
+                  type: string
+                  example: B737
+                capacity:
+                  type: integer
+                  example: 200
+      responses:
+        '201':
+          description: Airplane successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      modelNumber:
+                        type: string
+                        example: A320
+                      capacity:
+                        type: integer
+                        example: 180
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully got an airplane
+                  err:
+                    type: object
+                    example: {}
+        '500':
+          description: Server error
+  /airplane/{id}:
+    get:
+      summary: Get an airplane by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Airplane retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      modelNumber:
+                        type: string
+                        example: A320
+                      capacity:
+                        type: integer
+                        example: 180
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully got an airplane
+                  err:
+                    type: object
+                    example: {}
+        '404':
+          description: Airplane not found
+    patch:
+      summary: Update an airplane
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                modelNumber:
+                  type: string
+                  example: B747
+                capacity:
+                  type: integer
+                  example: 350
+      responses:
+        '200':
+          description: Airplane updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      modelNumber:
+                        type: string
+                        example: A320
+                      capacity:
+                        type: integer
+                        example: 180
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully got an airplane
+                  err:
+                    type: object
+                    example: {}
+    delete:
+      summary: Delete an airplane
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Airplane deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  err:
+                    type: object
+        '404':
+          description: Airplane not found
+  /city:
+    get:
+      summary: Get all cities
+      description: Retrieve all cities or filter by name.
+      parameters:
+        - name: name
+          in: query
+          description: Filter cities starting with this name
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of cities
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: New York
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  err:
+                    type: object
+    post:
+      summary: Create a new city
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: Paris
+      responses:
+        '201':
+          description: City successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: New York
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully got a city
+                  err:
+                    type: object
+                    example: {}
+        '500':
+          description: Server error
+  /city/{id}:
+    get:
+      summary: Get a city by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: City retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: New York
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully got a city
+                  err:
+                    type: object
+                    example: {}
+        '404':
+          description: City not found
+    patch:
+      summary: Update a city
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Berlin
+      responses:
+        '200':
+          description: City updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: New York
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully got a city
+                  err:
+                    type: object
+                    example: {}
+    delete:
+      summary: Delete a city
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: City deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  err:
+                    type: object
+        '404':
+          description: City not found
+  /tickets:
+    post:
+      summary: Create a new email reminder ticket
+      tags:
+        - Tickets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - subject
+                - content
+                - recepientEmail
+                - notificationTime
+              properties:
+                subject:
+                  type: string
+                  example: Meeting Reminder
+                content:
+                  type: string
+                  example: Don't forget the team meeting at 10 AM tomorrow.
+                recepientEmail:
+                  type: string
+                  format: email
+                  example: user@example.com
+                notificationTime:
+                  type: string
+                  format: date-time
+                  example: '2025-10-05T09:00:00Z'
+                status:
+                  type: string
+                  enum:
+                    - PENDING
+                    - SUCCESS
+                    - FAILED
+                  default: PENDING
+                  description: Status of the email reminder
+      responses:
+        '201':
+          description: Ticket successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      subject:
+                        type: string
+                        example: Meeting Reminder
+                      content:
+                        type: string
+                        example: Don't forget the team meeting at 10 AM tomorrow.
+                      recepientEmail:
+                        type: string
+                        format: email
+                        example: user@example.com
+                      status:
+                        type: string
+                        enum:
+                          - PENDING
+                          - SUCCESS
+                          - FAILED
+                        example: PENDING
+                      notificationTime:
+                        type: string
+                        format: date-time
+                        example: '2025-10-05T09:00:00Z'
+                      createdAt:
+                        type: string
+                        format: date-time
+                      updatedAt:
+                        type: string
+                        format: date-time
+                  message:
+                    type: string
+                    example: Successfully registered an email reminder
+                  err:
+                    type: object
+                    description: Error details, if any
+        '400':
+          description: Invalid input
+        '500':
+          description: Server error

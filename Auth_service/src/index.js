@@ -16,12 +16,7 @@ const prepareAndstartServer = () => {
 
   app.use("/api", ApiRoutes);
 
-  app.get("/health", (req, res) => {
-    res.send({
-      message: "working",
-      success: true,
-    });
-  });
+  
 
   // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

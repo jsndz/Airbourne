@@ -1,0 +1,115 @@
+openapi: 3.0.3
+info:
+  title: Reminder Service API
+  version: 1.0.0
+  description: API for creating and managing email reminders
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local server
+
+paths:
+  /tickets:
+    post:
+      summary: Create a new email reminder ticket
+      tags:
+        - Tickets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketCreate"
+      responses:
+        "201":
+          description: Ticket successfully created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketResponse"
+        "400":
+          description: Invalid input
+        "500":
+          description: Server error
+
+components:
+  schemas:
+    TicketCreate:
+      type: object
+      required:
+        - subject
+        - content
+        - recepientEmail
+        - notificationTime
+      properties:
+        subject:
+          type: string
+          example: "Meeting Reminder"
+        content:
+          type: string
+          example: "Don't forget the team meeting at 10 AM tomorrow."
+        recepientEmail:
+          type: string
+          format: email
+          example: "user@example.com"
+        notificationTime:
+          type: string
+          format: date-time
+          example: "2025-10-05T09:00:00Z"
+        status:
+          type: string
+          enum:
+            - PENDING
+            - SUCCESS
+            - FAILED
+          default: PENDING
+          description: Status of the email reminder
+
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        subject:
+          type: string
+          example: "Meeting Reminder"
+        content:
+          type: string
+          example: "Don't forget the team meeting at 10 AM tomorrow."
+        recepientEmail:
+          type: string
+          format: email
+          example: "user@example.com"
+        status:
+          type: string
+          enum:
+            - PENDING
+            - SUCCESS
+            - FAILED
+          example: PENDING
+        notificationTime:
+          type: string
+          format: date-time
+          example: "2025-10-05T09:00:00Z"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TicketResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: "#/components/schemas/Ticket"
+        message:
+          type: string
+          example: "Successfully registered an email reminder"
+        err:
+          type: object
+          description: Error details, if any

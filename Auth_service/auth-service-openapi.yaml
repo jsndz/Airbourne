@@ -1,0 +1,138 @@
+openapi: 3.0.1
+info:
+  title: Auth Service API
+  description: >
+    Authentication and User Management service.  
+    Provides signup, signin, authentication check, and admin validation endpoints.
+  version: "1.0.0"
+servers:
+  - url: http://localhost:3000/api/v1
+
+paths:
+  /signup:
+    post:
+      summary: User signup
+      description: Register a new user with email and password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: test@example.com
+                password:
+                  type: string
+                  minLength: 4
+                  maxLength: 50
+                  example: secret123
+      responses:
+        "201":
+          description: User created
+        "400":
+          description: Validation error
+        "500":
+          description: Server error
+
+  /signin:
+    post:
+      summary: User signin
+      description: Authenticate with email and password and receive a JWT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: test@example.com
+                password:
+                  type: string
+                  example: secret123
+      responses:
+        "200":
+          description: Successfully signed in (JWT returned)
+        "401":
+          description: Invalid credentials
+        "500":
+          description: Server error
+
+  /isAuthenticated:
+    get:
+      summary: Verify authentication
+      description: Check if a user token is valid and return user ID if authenticated.
+      parameters:
+        - in: header
+          name: x-access-token
+          required: true
+          schema:
+            type: string
+          description: JWT access token
+      responses:
+        "200":
+          description: Token valid
+        "401":
+          description: Invalid or missing token
+
+  /isAdmin:
+    get:
+      summary: Verify admin role
+      description: Checks if the user is an admin.
+      parameters:
+        - in: header
+          name: x-access-token
+          required: true
+          schema:
+            type: string
+          description: JWT access token
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: User ID to check admin role
+      responses:
+        "200":
+          description: User is admin
+        "403":
+          description: User is not admin
+        "401":
+          description: Unauthorized
+
+  /dummy:
+    get:
+      summary: Dummy endpoint
+      description: Returns a static OK response (for testing).
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: OK
+
+
+components:
+  securitySchemes:
+    AccessToken:
+      type: apiKey
+      in: header
+      name: x-access-token
+
+security:
+  - AccessToken: []

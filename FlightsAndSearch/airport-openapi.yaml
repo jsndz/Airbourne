@@ -1,0 +1,174 @@
+openapi: 3.0.3
+info:
+  title: Airport Service API
+  version: 1.0.0
+  description: API for managing airports (CRUD operations).
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+paths:
+  /airports:
+    get:
+      summary: Get all airports
+      description: Retrieve all airports.
+      responses:
+        '200':
+          description: A list of airports
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Airport'
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  err:
+                    type: object
+    post:
+      summary: Create a new airport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAirportRequest'
+      responses:
+        '201':
+          description: Airport successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirportResponse'
+        '500':
+          description: Server error
+
+  /airports/{id}:
+    get:
+      summary: Get an airport by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Airport retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirportResponse'
+        '404':
+          description: Airport not found
+    patch:
+      summary: Update an airport
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAirportRequest'
+      responses:
+        '200':
+          description: Airport updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirportResponse'
+    delete:
+      summary: Delete an airport
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Airport deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  err:
+                    type: object
+        '404':
+          description: Airport not found
+
+components:
+  schemas:
+    Airport:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Kempegowda International Airport"
+        address:
+          type: string
+          example: "Devanahalli, Bengaluru, Karnataka"
+        cityId:
+          type: integer
+          example: 101
+    CreateAirportRequest:
+      type: object
+      required:
+        - name
+        - cityId
+      properties:
+        name:
+          type: string
+          example: "Chhatrapati Shivaji International Airport"
+        address:
+          type: string
+          example: "Mumbai, Maharashtra"
+        cityId:
+          type: integer
+          example: 102
+    UpdateAirportRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Indira Gandhi International Airport"
+        address:
+          type: string
+          example: "New Delhi, India"
+        cityId:
+          type: integer
+          example: 103
+    AirportResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Airport'
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Successfully got an airport
+        err:
+          type: object
+          example: {}

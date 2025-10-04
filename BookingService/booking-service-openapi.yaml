@@ -1,0 +1,120 @@
+openapi: 3.0.1
+info:
+  title: Booking Service API
+  description: >
+    Service for handling flight bookings.  
+    Includes booking creation, message publishing to queue, and service health endpoints.
+  version: "1.0.0"
+
+servers:
+  - url: http://localhost:4000/api/v1
+
+paths:
+  /bookings:
+    post:
+      summary: Create a booking
+      description: >
+        Creates a new booking transactionally.  
+        Validates seat availability from Flight Service, calculates cost, persists booking,
+        and updates flight seat count.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - flightId
+                - userId
+                - NoOfSeats
+              properties:
+                flightId:
+                  type: integer
+                  example: 101
+                userId:
+                  type: integer
+                  example: 202
+                NoOfSeats:
+                  type: integer
+                  minimum: 1
+                  example: 2
+      responses:
+        "200":
+          description: Booking successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Booking"
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                    example: Successfully completed booking
+        "400":
+          description: Validation error or insufficient seats
+        "500":
+          description: Internal server error
+
+  /publish:
+    post:
+      summary: Publish booking message
+      description: >
+        Publishes a notification message to the Reminder Queue.  
+        This can be used for email/SMS notifications regarding booking.
+      responses:
+        "201":
+          description: Message successfully published
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Successfully completed publishing
+        "503":
+          description: Service unavailable (channel not ready)
+
+  /info:
+    get:
+      summary: Info endpoint
+      description: Returns metadata about Booking Service routes.
+      responses:
+        "200":
+          description: Info response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Response from routes
+
+components:
+  schemas:
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        flightId:
+          type: integer
+          example: 101
+        userId:
+          type: integer
+          example: 202
+        status:
+          type: string
+          enum: [InProcess, Booked, Cancelled]
+          example: Booked
+        NoOfSeats:
+          type: integer
+          example: 2
+        totalCost:
+          type: number
+          example: 10000

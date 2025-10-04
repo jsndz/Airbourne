@@ -1,0 +1,165 @@
+openapi: 3.0.3
+info:
+  title: Airplane Service API
+  version: 1.0.0
+  description: API for managing airplanes (CRUD operations).
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+paths:
+  /airplane:
+    get:
+      summary: Get all airplanes
+      description: Retrieve all airplanes.
+      responses:
+        '200':
+          description: A list of airplanes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Airplane'
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  err:
+                    type: object
+    post:
+      summary: Create a new airplane
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAirplaneRequest'
+      responses:
+        '201':
+          description: Airplane successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirplaneResponse'
+        '500':
+          description: Server error
+
+  /airplane/{id}:
+    get:
+      summary: Get an airplane by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Airplane retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirplaneResponse'
+        '404':
+          description: Airplane not found
+    patch:
+      summary: Update an airplane
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAirplaneRequest'
+      responses:
+        '200':
+          description: Airplane updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AirplaneResponse'
+    delete:
+      summary: Delete an airplane
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Airplane deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: boolean
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  err:
+                    type: object
+        '404':
+          description: Airplane not found
+
+components:
+  schemas:
+    Airplane:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        modelNumber:
+          type: string
+          example: "A320"
+        capacity:
+          type: integer
+          example: 180
+    CreateAirplaneRequest:
+      type: object
+      required:
+        - modelNumber
+        - capacity
+      properties:
+        modelNumber:
+          type: string
+          example: "B737"
+        capacity:
+          type: integer
+          example: 200
+    UpdateAirplaneRequest:
+      type: object
+      properties:
+        modelNumber:
+          type: string
+          example: "B747"
+        capacity:
+          type: integer
+          example: 350
+    AirplaneResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Airplane'
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Successfully got an airplane
+        err:
+          type: object
+          example: {}

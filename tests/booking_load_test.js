@@ -11,15 +11,15 @@ export let options = {
 };
 
 export function setup() {
-  const SERVER_URL = "http://localhost:3001";
-  const FLIGHTS_URL = "http://localhost:3002";
+  const SERVER_URL = "http://auth-service:3001";
+  const FLIGHTS_URL = "http://flights-service:3002";
 
-  let city1 = http.post(`${FLIGHTS_URL}/api/v1/city`, JSON.stringify({ name: "CityA" }), {
+  let city1 = http.post(`${FLIGHTS_URL}/api/v1/city`, JSON.stringify({ name: "City77" }), {
     headers: { "Content-Type": "application/json" },
   });
   let city1Id = JSON.parse(city1.body).data.id;
 
-  let city2 = http.post(`${FLIGHTS_URL}/api/v1/city`, JSON.stringify({ name: "CityB" }), {
+  let city2 = http.post(`${FLIGHTS_URL}/api/v1/city`, JSON.stringify({ name: "City78" }), {
     headers: { "Content-Type": "application/json" },
   });
   let city2Id = JSON.parse(city2.body).data.id;
@@ -64,14 +64,17 @@ export function setup() {
   let login = http.post(`${SERVER_URL}/api/v1/signin`, JSON.stringify({ email, password }), {
     headers: { "Content-Type": "application/json" },
   });
-  let token = JSON.parse(login.body).data.token;
-  let userId = JSON.parse(login.body).data.id;
-
+  
+  
+  let token = loginBody.data?.token;  
+  let userId = loginBody.data?.id;
   return { flightId, token, userId };
+
 }
 
 export default function (data) {
-  const API_GATEWAY = "http://localhost:3005";
+  const API_GATEWAY = "http://api-gateway:3005";
+
   let bookingPayload = {
     flightId: data.flightId,
     userId: data.userId,
@@ -80,7 +83,7 @@ export default function (data) {
     status: "InProcess",
   };
 
-  let res = http.post(`${API_GATEWAY}/bookingservice/api/v1/bookings`, JSON.stringify(bookingPayload), {
+  let res = http.post(`${API_GATEWAY}/bookingservice`, JSON.stringify(bookingPayload), {
     headers: {
       "Content-Type": "application/json",
       "x-access-token": data.token,
@@ -91,5 +94,5 @@ export default function (data) {
     "booking created successfully": (r) => r.status === 200,
   });
 
-  sleep(1); 
+  sleep(1);
 }

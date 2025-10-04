@@ -17,7 +17,9 @@ const limiter = rateLimit({
 
 app.use(morgan("combined")); 
 app.use(limiter);
+const swaggerDocument = yaml.load(fs.readFileSync("./api-gateway-openapi.yaml", "utf8"));
 
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.get("/health", (req, res) => {
   return res.json({ message: "OK" });
 });
@@ -48,6 +50,27 @@ const bookingServiceProxy = createProxyMiddleware({
   changeOrigin: true,
   pathRewrite: { "^/bookingservice": "" }, 
 });
+const flightsProxy = createProxyMiddleware({
+  target: process.env.FLIGHTS_URL,
+  changeOrigin: true,
+  pathRewrite: { "^/flights": "" },
+});
+
+const airportsProxy = createProxyMiddleware({
+  target: process.env.AIRPORTS_URL,
+  changeOrigin: true,
+  pathRewrite: { "^/airports": "" },
+});
+
+const reminderProxy = createProxyMiddleware({
+  target: process.env.REMINDER_URL,
+  changeOrigin: true,
+  pathRewrite: { "^/reminder": "" },
+});
+
+app.use("/flights", authMiddleware, flightsProxy);
+app.use("/airports", authMiddleware, airportsProxy);
+app.use("/reminder", authMiddleware, reminderProxy);
 
 
 app.use("/bookingservice", authMiddleware, bookingServiceProxy);
