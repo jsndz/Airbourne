@@ -28,7 +28,6 @@ class BookingController {
     async create (req,res) {
         try {
             const response  = await bookingService.createBooking(req.body);
-            console.log("from controller ",response)
             return res.status(StatusCodes.OK).json({
                 data: response,
                 success: true,
@@ -36,7 +35,6 @@ class BookingController {
                 message: 'Successfully completed  booking'
             });
         } catch (error) { 
-            console.log("from err book controler",error)
             return res.status(error.statusCode).json({
                 data: {},
                 sucess: false,

@@ -55,7 +55,6 @@ const getAll = async (req, res) => {
 const get = async (req, res) => {
   try {
     const response = await flightService.getFlight(req.params.id);
-    console.log(response);
     
     return res.status(successCodes.OK).json({
       data: response,
@@ -96,7 +95,6 @@ const update = async (req, res) => {
 const destroy = async (req, res) => {
   try {
     const response = await flightService.deleteFlight(req.params.id);
-    console.log(response);
 
     return res.status(successCodes.OK).json({
       data: response,

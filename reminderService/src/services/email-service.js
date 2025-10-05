@@ -49,7 +49,6 @@ const subscribeEvents = async (payload) => {
             await sendBasicEmail(data);
             break;
         default:
-            console.log('NO valid event recieved')
             break;
     }
 }

@@ -41,7 +41,6 @@ const authMiddleware = async (req, res, next) => {
       headers: { "x-access-token": token },
     });
 
-    console.log(response.data);
 
     if (response.data) {
       next(); 

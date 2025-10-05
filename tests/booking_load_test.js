@@ -2,7 +2,7 @@ import http from "k6/http";
 import { check, sleep } from "k6";
 
 export let options = {
-  vus: 50,
+  vus: 100,
   duration: "1m",
   thresholds: {
     http_req_duration: ["p(95)<500"],
@@ -14,10 +14,7 @@ function randStr(prefix) {
   return `${prefix}_${Math.floor(Math.random() * 100000)}`;
 }
 
-
-export default function (data) {
-  const API_GATEWAY = "http://api-gateway:3005";
-const SERVER_URL = "http://auth-service:3001";
+export function setup() {
   const FLIGHTS_URL = "http://flights-service:3002";
 
 
@@ -31,11 +28,9 @@ const SERVER_URL = "http://auth-service:3001";
 
   const city1Id = JSON.parse(city1.body)?.data?.id;
   const city2Id = JSON.parse(city2.body)?.data?.id;
-console.log("city:",city1Id,city2Id);
 
 
 
-  // 2️⃣ Create airports
   const depAirport = http.post(`${FLIGHTS_URL}/api/v1/airports`, JSON.stringify({
     name: randStr("DepAirport"),
     address: randStr("Address"),
@@ -53,10 +48,7 @@ console.log("city:",city1Id,city2Id);
 
 
   const arrivalAirportId = JSON.parse(arrAirport.body)?.data?.id;
-// console.log("airport:",arrAirport.body,depAirport.body);
-console.log("airport:",arrivalAirportId,departureAirportId);
 
-  // 3️⃣ Create airplane
   const airplane = http.post(`${FLIGHTS_URL}/api/v1/airplane`, JSON.stringify({
     modelNumber: randStr("Boeing"),
     capacity: 150 + Math.floor(Math.random() * 100),
@@ -64,7 +56,6 @@ console.log("airport:",arrivalAirportId,departureAirportId);
 
 
   const airplaneId = JSON.parse(airplane.body)?.data?.id;
-console.log("airplane:",airplaneId);
 
   let flightBody = {
     flightNumber: randStr("FN"),
@@ -76,19 +67,17 @@ console.log("airplane:",airplaneId);
     price: 5000,
     boardingGate: randStr("Gate"),
   }
-  // console.log(flightBody);
   
-  // 4️⃣ Create flight
   const flight = http.post(`${FLIGHTS_URL}/api/v1/flights`, JSON.stringify(flightBody), { headers: { "Content-Type": "application/json" } });
-  // console.log(flight.body);
-  
-
   const flightId = JSON.parse(flight.body)?.data?.id;
+ return {flightId}
 
- console.log("airplane:",flightId);
+}
+export default function (data) {
+  const API_GATEWAY = "http://api-gateway:3005";
+const SERVER_URL = "http://auth-service:3001";
 
-  
-  const email = `${randStr("user")}@test.com`;
+const email = `${randStr("user")}@test.com`;
   const password = "password123";
 
   const signupRes = http.post(`${SERVER_URL}/api/v1/signup`, JSON.stringify({ email, password }), {
@@ -98,20 +87,16 @@ console.log("airplane:",airplaneId);
   const loginRes = http.post(`${SERVER_URL}/api/v1/signin`, JSON.stringify({ email, password }), {
     headers: { "Content-Type": "application/json" },
   });
-
   let parsed;
   try {
     parsed = JSON.parse(loginRes.body);
   } catch (e) {
     parsed = {};
   }
-
-  const token = parsed.data?.token;
+   const token = parsed.data?.token;
   const userId = parsed.data?.id;
-
-
   const bookingPayload = {
-    flightId: flightId,
+    flightId: data.flightId,
     userId: userId,
     NoOfSeats: 1 + Math.floor(Math.random() * 5),
   };
@@ -126,6 +111,7 @@ console.log("airplane:",airplaneId);
       },
     }
   );
+  
 
 
   check(res, {

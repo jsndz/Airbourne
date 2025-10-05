@@ -1,7 +1,8 @@
 # Airbourne
 
-## Overview
 Airbourne is a microservices-based flight booking platform composed of independently deployable Node.js services. It supports flight search and management, user authentication and authorization, ticket booking, and email reminders/notifications. An API Gateway provides rate limiting and routing to backend services.
+![architecture](./public/architecture.png)
+
 
 ## Architecture
 - **API Gateway (`API_gateway`)**

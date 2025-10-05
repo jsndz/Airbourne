@@ -15,12 +15,10 @@ const setUpJobs = () => {
               console.log(err);
             }
             else {
-              console.log(data);
               await emailService.updateTicket(email.id,{status:"SUCCESS"})
             }
           });
         });
-        console.log(response);
       });
 }
 

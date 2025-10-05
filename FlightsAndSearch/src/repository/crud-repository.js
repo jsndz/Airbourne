@@ -54,7 +54,6 @@ class CrudRepository {
           id: modelId,
         },
       });
-      console.log(result);
 
       return result;
     } catch (error) {
