@@ -26,8 +26,13 @@ const create = async (req, res) => {
 
 const isAuthenticated = async (req, res) => {
   try {
+    
     const token = await req.headers["x-access-token"];
+        console.log("getting token",token);
+
     const response = await userService.isAuthenticated(token);
+    console.log("getting token",response);
+
     return res.status(201).json({
       data: response,
       error: {},

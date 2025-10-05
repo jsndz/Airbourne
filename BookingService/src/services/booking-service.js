@@ -15,7 +15,10 @@ class BookingService {
 
             const flightId = data.flightId;
             let getFlightRequestURL = `${FLIGHT_SERVICE_PATH}/api/v1/flights/${flightId}`;
+            
             const response = await axios.get(getFlightRequestURL);
+                    console.log(response.data);
+
             let flightData =response.data.data;
             let priceOfTheFlight = flightData.price;
             if (data.NoOfSeats > flightData.totalSeats){

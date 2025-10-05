@@ -2,96 +2,134 @@ import http from "k6/http";
 import { check, sleep } from "k6";
 
 export let options = {
-  vus: 50, 
-  duration: "1m", 
+  vus: 50,
+  duration: "1m",
   thresholds: {
-    http_req_duration: ["p(95)<500"], 
-    http_req_failed: ["rate<0.01"],   
+    http_req_duration: ["p(95)<500"],
+    http_req_failed: ["rate<0.01"],
   },
 };
 
-export function setup() {
-  const SERVER_URL = "http://auth-service:3001";
-  const FLIGHTS_URL = "http://flights-service:3002";
-
-  let city1 = http.post(`${FLIGHTS_URL}/api/v1/city`, JSON.stringify({ name: "City77" }), {
-    headers: { "Content-Type": "application/json" },
-  });
-  let city1Id = JSON.parse(city1.body).data.id;
-
-  let city2 = http.post(`${FLIGHTS_URL}/api/v1/city`, JSON.stringify({ name: "City78" }), {
-    headers: { "Content-Type": "application/json" },
-  });
-  let city2Id = JSON.parse(city2.body).data.id;
-
-  let depAirport = http.post(`${FLIGHTS_URL}/api/v1/airports`, JSON.stringify({
-    name: "DepAirport",
-    address: "Somewhere",
-    cityId: city1Id,
-  }), { headers: { "Content-Type": "application/json" } });
-  let depAirportId = JSON.parse(depAirport.body).data.id;
-
-  let arrAirport = http.post(`${FLIGHTS_URL}/api/v1/airports`, JSON.stringify({
-    name: "ArrAirport",
-    address: "Elsewhere",
-    cityId: city2Id,
-  }), { headers: { "Content-Type": "application/json" } });
-  let arrAirportId = JSON.parse(arrAirport.body).data.id;
-
-  let airplane = http.post(`${FLIGHTS_URL}/api/v1/airplane`, JSON.stringify({
-    modelNumber: "Boeing777",
-    capacity: 200,
-  }), { headers: { "Content-Type": "application/json" } });
-  let airplaneId = JSON.parse(airplane.body).data.id;
-
-  let flight = http.post(`${FLIGHTS_URL}/api/v1/flights`, JSON.stringify({
-    flightNumber: `FN${Math.floor(Math.random() * 1000)}`,
-    airplaneId,
-    departureAirportID: depAirportId,
-    arrivalAirportId: arrAirportId,
-    departureTime: "2025-10-10T10:00:00Z",
-    arrivalTime: "2025-10-10T12:00:00Z",
-    price: 5000,
-  }), { headers: { "Content-Type": "application/json" } });
-  let flightId = JSON.parse(flight.body).data.id;
-
-  let email = `user${Math.floor(Math.random() * 1000)}@test.com`;
-  let password = "password123";
-
-  http.post(`${SERVER_URL}/api/v1/signup`, JSON.stringify({ email, password }), {
-    headers: { "Content-Type": "application/json" },
-  });
-  let login = http.post(`${SERVER_URL}/api/v1/signin`, JSON.stringify({ email, password }), {
-    headers: { "Content-Type": "application/json" },
-  });
-  
-  
-  let token = loginBody.data?.token;  
-  let userId = loginBody.data?.id;
-  return { flightId, token, userId };
-
+function randStr(prefix) {
+  return `${prefix}_${Math.floor(Math.random() * 100000)}`;
 }
+
 
 export default function (data) {
   const API_GATEWAY = "http://api-gateway:3005";
+const SERVER_URL = "http://auth-service:3001";
+  const FLIGHTS_URL = "http://flights-service:3002";
 
-  let bookingPayload = {
-    flightId: data.flightId,
-    userId: data.userId,
-    NoOfSeats: 2,
-    totalCost: 10000,
-    status: "InProcess",
-  };
 
-  let res = http.post(`${API_GATEWAY}/bookingservice`, JSON.stringify(bookingPayload), {
-    headers: {
-      "Content-Type": "application/json",
-      "x-access-token": data.token,
-    },
+  const city1 = http.post(`${FLIGHTS_URL}/api/v1/city`, JSON.stringify({ name: randStr("City") }), {
+    headers: { "Content-Type": "application/json" },
+  });
+  const city2 = http.post(`${FLIGHTS_URL}/api/v1/city`, JSON.stringify({ name: randStr("City") }), {
+    headers: { "Content-Type": "application/json" },
   });
 
+
+  const city1Id = JSON.parse(city1.body)?.data?.id;
+  const city2Id = JSON.parse(city2.body)?.data?.id;
+console.log("city:",city1Id,city2Id);
+
+
+
+  // 2️⃣ Create airports
+  const depAirport = http.post(`${FLIGHTS_URL}/api/v1/airports`, JSON.stringify({
+    name: randStr("DepAirport"),
+    address: randStr("Address"),
+    cityId: city1Id,
+  }), { headers: { "Content-Type": "application/json" } });
+
+
+  const departureAirportId = JSON.parse(depAirport.body)?.data?.id;
+
+  const arrAirport = http.post(`${FLIGHTS_URL}/api/v1/airports`, JSON.stringify({
+    name: randStr("ArrAirport"),
+    address: randStr("Address"),
+    cityId: city2Id,
+  }), { headers: { "Content-Type": "application/json" } });
+
+
+  const arrivalAirportId = JSON.parse(arrAirport.body)?.data?.id;
+// console.log("airport:",arrAirport.body,depAirport.body);
+console.log("airport:",arrivalAirportId,departureAirportId);
+
+  // 3️⃣ Create airplane
+  const airplane = http.post(`${FLIGHTS_URL}/api/v1/airplane`, JSON.stringify({
+    modelNumber: randStr("Boeing"),
+    capacity: 150 + Math.floor(Math.random() * 100),
+  }), { headers: { "Content-Type": "application/json" } });
+
+
+  const airplaneId = JSON.parse(airplane.body)?.data?.id;
+console.log("airplane:",airplaneId);
+
+  let flightBody = {
+    flightNumber: randStr("FN"),
+    airplaneId: airplaneId,
+    departureAirportID: departureAirportId,
+    arrivalAirportId: arrivalAirportId,
+    departureTime: "2025-10-10T10:00:00Z",
+    arrivalTime: "2025-10-10T12:00:00Z",
+    price: 5000,
+    boardingGate: randStr("Gate"),
+  }
+  // console.log(flightBody);
+  
+  // 4️⃣ Create flight
+  const flight = http.post(`${FLIGHTS_URL}/api/v1/flights`, JSON.stringify(flightBody), { headers: { "Content-Type": "application/json" } });
+  // console.log(flight.body);
+  
+
+  const flightId = JSON.parse(flight.body)?.data?.id;
+
+ console.log("airplane:",flightId);
+
+  
+  const email = `${randStr("user")}@test.com`;
+  const password = "password123";
+
+  const signupRes = http.post(`${SERVER_URL}/api/v1/signup`, JSON.stringify({ email, password }), {
+    headers: { "Content-Type": "application/json" },
+  });
+
+  const loginRes = http.post(`${SERVER_URL}/api/v1/signin`, JSON.stringify({ email, password }), {
+    headers: { "Content-Type": "application/json" },
+  });
+
+  let parsed;
+  try {
+    parsed = JSON.parse(loginRes.body);
+  } catch (e) {
+    parsed = {};
+  }
+
+  const token = parsed.data?.token;
+  const userId = parsed.data?.id;
+
+
+  const bookingPayload = {
+    flightId: flightId,
+    userId: userId,
+    NoOfSeats: 1 + Math.floor(Math.random() * 5),
+  };
+
+
+  const res = http.post(`${API_GATEWAY}/bookingservice/api/v1/bookings`,
+    JSON.stringify(bookingPayload),
+    {
+      headers: {
+        "Content-Type": "application/json",
+        "x-access-token": token,
+      },
+    }
+  );
+
+
   check(res, {
-    "booking created successfully": (r) => r.status === 200,
+    "booking response received": (r) => r.status === 200,
   });
 
   sleep(1);

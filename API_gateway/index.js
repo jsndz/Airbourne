@@ -1,9 +1,13 @@
+require("dotenv").config();
+
 const express = require("express");
 const morgan = require("morgan");
 const { createProxyMiddleware } = require("http-proxy-middleware");
 const { rateLimit } = require("express-rate-limit");
 const axios = require("axios");
-
+const swaggerUi = require("swagger-ui-express");
+const fs = require("fs");
+const yaml = require("js-yaml");
 const app = express();
 const PORT = 3005;
 
@@ -26,6 +30,8 @@ app.get("/health", (req, res) => {
 
 const authMiddleware = async (req, res, next) => {
   try {
+    
+    
     const token = req.headers["x-access-token"];
     if (!token) {
       return res.status(401).json({ message: "No token provided" });
@@ -35,7 +41,9 @@ const authMiddleware = async (req, res, next) => {
       headers: { "x-access-token": token },
     });
 
-    if (response.data.success) {
+    console.log(response.data);
+
+    if (response.data) {
       next(); 
     } else {
       return res.status(401).json({ message: "Authorization error" });
@@ -46,33 +54,30 @@ const authMiddleware = async (req, res, next) => {
 };
 
 const bookingServiceProxy = createProxyMiddleware({
-  target: `${process.env.SERVICE_URL}`,
+  target: `${process.env.BOOKING_URL}`,
   changeOrigin: true,
   pathRewrite: { "^/bookingservice": "" }, 
 });
 const flightsProxy = createProxyMiddleware({
-  target: process.env.FLIGHTS_URL,
+  target: process.env.SERVICE_URL,
   changeOrigin: true,
   pathRewrite: { "^/flights": "" },
 });
-
-const airportsProxy = createProxyMiddleware({
-  target: process.env.AIRPORTS_URL,
+const authProxy = createProxyMiddleware({
+  target: process.env.AUTH_URL,
   changeOrigin: true,
-  pathRewrite: { "^/airports": "" },
+  pathRewrite: { "^/auth": "" },
 });
+
 
 const reminderProxy = createProxyMiddleware({
   target: process.env.REMINDER_URL,
   changeOrigin: true,
   pathRewrite: { "^/reminder": "" },
 });
-
+app.use("/auth", authProxy);
 app.use("/flights", authMiddleware, flightsProxy);
-app.use("/airports", authMiddleware, airportsProxy);
 app.use("/reminder", authMiddleware, reminderProxy);
-
-
 app.use("/bookingservice", authMiddleware, bookingServiceProxy);
 
 
