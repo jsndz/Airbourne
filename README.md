@@ -213,6 +213,32 @@ curl -H "x-access-token: <JWT_TOKEN>" http://localhost:3005/bookingservice/healt
 - **Database**: Sequelize models and migrations for core domain entities; optional `DB_SYNC`/`SYNC` modes for iterative dev.
 - **Messaging**: Centralized message queue consumption in Reminder Service with pluggable handlers (`subscribeEvents`).
 
+## Load Testing
+- Tools: **k6** for load, **InfluxDB** for storage, **Grafana** for dashboards.
+- Scenario: Auth → book via API Gateway against Booking Service using staged VUs.
+- Script: `tests/booking_load_test.js`
+
+### Run locally
+```bash
+# from repo root
+npm --prefix tests install
+k6 run tests/booking_load_test.js
+```
+
+### Thresholds (example)
+```js
+thresholds: {
+  http_req_duration: ["p(95)<2000"],
+  http_req_failed: ["rate<0.05"],
+}
+```
+
+### Result snapshot
+- p95 latency ≈ 1.44s, failure rate ≈ 0.14%
+- See dashboard image in `public/k6_test_2.png`.
+
+For detailed setup, rationale, and test evolution, see [docs/load_testing.md](./docs/load_testing.md).
+
 ## Contributing
 - Use feature branches and conventional commits.
 - Add/adjust Swagger docs when changing `Auth_service` routes.
