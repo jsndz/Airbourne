@@ -37,7 +37,7 @@ services:
     ports:
       - "3308:3306"
     volumes:
-        - booking_db:/var/lib/mysql
+      - booking_db:/var/lib/mysql
   notification_db:
     image: mysql:8.0
     container_name: notification_db
@@ -50,23 +50,23 @@ services:
     ports:
       - "3309:3306"
     volumes:
-        - notification_db:/var/lib/mysql
+      - notification_db:/var/lib/mysql
   rabbitmq:
-      image: rabbitmq:3.13-management  
-      container_name: rabbitmq
-      ports:
-        - "5672:5672"
-        - "15672:15672" 
-      environment:
-        RABBITMQ_DEFAULT_USER: admin
-        RABBITMQ_DEFAULT_PASS: admin
-      volumes:
-        - rabbitmq_data:/var/lib/rabbitmq
+    image: rabbitmq:3.13-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
   influxdb:
     image: influxdb:1.8
-#    entrypoint: /bin/sh
-#    user: root
-    
+    #    entrypoint: /bin/sh
+    #    user: root
+
     ports:
       - "8086:8086"
     environment:
@@ -74,9 +74,9 @@ services:
 
   grafana:
     image: grafana/grafana:8.5.21
-#    entrypoint: /bin/sh
-#    user: root
-    
+    #    entrypoint: /bin/sh
+    #    user: root
+
     ports:
       - "3000:3000"
     environment:
@@ -89,8 +89,6 @@ services:
       - ./grafana-dashboard.yaml:/etc/grafana/provisioning/dashboards/dashboard.yaml
       - ./grafana-datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
 
-
-    
   api-gateway:
     build: ./API_gateway
     ports:
@@ -101,7 +99,6 @@ services:
       - flights-service
       - reminder-service
 
-
   auth-service:
     build: ./Auth_service
     ports:
@@ -109,7 +106,6 @@ services:
     depends_on:
       - auth_db
       - rabbitmq
-
 
   booking-service:
     build: ./BookingService
@@ -119,7 +115,6 @@ services:
       - booking_db
       - flights_db
       - rabbitmq
-  
 
   flights-service:
     build: ./FlightsAndSearch
@@ -128,7 +123,6 @@ services:
     depends_on:
       - flights_db
       - rabbitmq
- 
 
   reminder-service:
     build: ./reminderService
@@ -141,9 +135,9 @@ services:
 
   k6:
     image: grafana/k6:latest
-#    entrypoint: /bin/sh
-#    user: root
-    
+    #    entrypoint: /bin/sh
+    #    user: root
+
     ports:
       - "6565:6565"
     environment:
@@ -158,12 +152,9 @@ services:
       - booking-service
       - api-gateway
 
-
-
 volumes:
   auth_db:
   flights_db:
   booking_db:
   rabbitmq_data:
   notification_db:
-

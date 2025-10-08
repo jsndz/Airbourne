@@ -3,8 +3,8 @@
 Airbourne is a microservices-based flight booking platform composed of independently deployable Node.js services. It supports flight search and management, user authentication and authorization, ticket booking, and email reminders/notifications. An API Gateway provides rate limiting and routing to backend services.
 ![architecture](./public/architecture.png)
 
-
 ## Architecture
+
 - **API Gateway (`API_gateway`)**
   - Express reverse proxy with rate limiting via `express-rate-limit`
   - Proxies `/bookingservice` to Booking Service (localhost:3002)
@@ -28,19 +28,23 @@ Airbourne is a microservices-based flight booking platform composed of independe
   - Port: from `PORT` env (commonly `3002`)
 
 ### Data Flow
+
 1. Client authenticates against `Auth_service` and receives a JWT.
 2. Requests to `/bookingservice/**` go through `API_gateway` where the JWT is verified by `Auth_service`.
 3. Gateway proxies authorized requests to Booking Service.
 4. Booking/flight changes may emit AMQP events; `reminderService` consumes and sends emails.
 
 ## RabbitMQ (AMQP) Usage
+
 ### Why RabbitMQ
+
 - Decouples services so producers (e.g., Booking) and consumers (Reminder) can scale independently.
 - Improves reliability and user experience by handling asynchronous work (emails, notifications) off the critical request path.
 - Adds resilience via queueing and retries; transient failures in consumers do not impact producers immediately.
 - Enables fan-out and selective routing using exchanges and binding keys.
 
 ### Where It’s Used
+
 - **Reminder Service** subscribes to messages to create and send notifications.
   - Queue: `notification_queue`
   - Binding key (from env): `EXCHANGE_BINDING_KEY` (exposed as `REMINDER_BINDING_KEY` in code)
@@ -49,18 +53,22 @@ Airbourne is a microservices-based flight booking platform composed of independe
 - **Producers** (e.g., Booking Service and/or Flights Service) publish events such as ticket creation, payment success, or flight updates. These events are routed to the `notification_queue` for downstream processing by the Reminder Service.
 
 ### Message Handling
+
 - The Reminder Service’s `EmailService.subscribeEvents(payload)` switches on `payload.service` to trigger actions:
   - `CREATE_TICKET`: persists a notification ticket for later sending
   - `SEND_BASIC_MAIL`: sends a basic email via Nodemailer
 - A scheduled job scans for `PENDING` tickets and dispatches emails, updating ticket status afterward.
 
 ### RabbitMQ Environment
+
 Add to `.env` in `reminderService` (and to producers where applicable):
+
 - `MESSAGE_BROKER_URL` (e.g., `amqp://localhost`)
 - `EXCHANGE_NAME`
 - `EXCHANGE_BINDING_KEY` (used as `REMINDER_BINDING_KEY` in code)
 
 ## Technologies
+
 - Node.js, Express, Sequelize (MySQL)
 - JWT for auth (`jsonwebtoken`), password hashing (`bcrypt`)
 - Reverse proxy (`http-proxy-middleware`), logging (`morgan`)
@@ -70,20 +78,24 @@ Add to `.env` in `reminderService` (and to producers where applicable):
 - Dev tooling: `nodemon`, Swagger (`swagger-jsdoc`, `swagger-ui-express`)
 
 ## Environment Variables
+
 Create a `.env` file in each service with the following (adjust as needed):
 
 - Auth Service (`Auth_service`)
+
   - `PORT` (e.g., 3001)
   - `JWT_key` (secret for signing tokens)
   - `DB_SYNC` (optional; truthy to run `sequelize.sync({ alter: true })`)
   - Standard Sequelize environment via `src/config/config.json`
 
 - Flights and Search (`FlightsAndSearch`)
+
   - `PORT`
   - `SYNC` (truthy to run `sequelize.sync({ force: true })`)
   - Standard Sequelize environment via `src/config/config.json`
 
 - Reminder Service (`reminderService`)
+
   - `PORT`
   - `EMAIL_ID`, `EMAIL_PASS`
   - `MESSAGE_BROKER_URL` (e.g., `amqp://localhost`)
@@ -92,6 +104,7 @@ Create a `.env` file in each service with the following (adjust as needed):
   - Standard Sequelize environment via `src/config/config.json`
 
 - API Gateway (`API_gateway`)
+
   - Typically no `.env` needed; update target URLs in `index.js` if changed
 
 - Air Ticket Booking Service (`AirTicketBookingService`)
@@ -99,7 +112,9 @@ Create a `.env` file in each service with the following (adjust as needed):
   - Database and any AMQP config (follow the pattern from other services)
 
 ## Database Configuration
+
 For services using Sequelize, create `src/config/config.json`:
+
 ```json
 {
   "development": {
@@ -111,7 +126,9 @@ For services using Sequelize, create `src/config/config.json`:
   }
 }
 ```
+
 Initialize databases per service:
+
 ```bash
 npx sequelize db:create
 # Optional during development
@@ -121,11 +138,13 @@ DB_SYNC=true node src/index.js
 ## Services: Endpoints and Ports
 
 ### API Gateway (3005)
+
 - `GET /home` → health check
 - Proxies `/bookingservice/**` to `http://localhost:3002/**` after calling `Auth_service` `GET http://localhost:3001/api/v1/isAuthenticated` with header `x-access-token`
 - Rate limit: 5 requests per 2 minutes per IP
 
 ### Auth Service (PORT, default 3001)
+
 - Base path: `/api/v1`
 - `POST /signup` → body: `{ email, password }`
 - `POST /signin` → body: `{ email, password }` → returns token
@@ -136,6 +155,7 @@ DB_SYNC=true node src/index.js
 - `GET /api-docs` → Swagger UI
 
 ### Flights and Search (PORT)
+
 - Base path: `/api/v1`
 - Cities
   - `POST /city`
@@ -163,25 +183,30 @@ DB_SYNC=true node src/index.js
   - `DELETE /flights/:id`
 
 ### Reminder Service (PORT)
+
 - Subscribes to AMQP queue `notification_queue` with binding key `EXCHANGE_BINDING_KEY`
 - `POST /api/v1/tickets` → create notification ticket
 - Scheduled job runner triggers email sends for `PENDING` tickets
 
 ### Air Ticket Booking Service (PORT, default 3002)
+
 - Exposed via API Gateway at `/bookingservice/**`
 - Health: `GET /health`
 - Additional routes depend on implementation (follow existing service patterns)
 
 ## Running Locally
+
 Open four terminals and start each service after installing dependencies.
 
 Install dependencies:
+
 ```bash
 # In each service directory
 npm install
 ```
 
 Start services:
+
 ```bash
 # API Gateway
 node index.js
@@ -200,12 +225,14 @@ npm start  # if nodemon config present; otherwise node src/index.js
 ```
 
 Set headers when calling protected routes via Gateway:
+
 ```bash
 # Example: calling booking service via gateway after signin
 curl -H "x-access-token: <JWT_TOKEN>" http://localhost:3005/bookingservice/health
 ```
 
 ## Development Notes & Expertise Highlights
+
 - **Security**: JWT-based auth; input validation for critical endpoints; role-check endpoint (`/isAdmin`).
 - **Reliability**: Rate limiting in gateway; structured error codes; health endpoints.
 - **Scalability**: Microservices with independent ports; AMQP-based decoupling for async tasks.
@@ -214,11 +241,13 @@ curl -H "x-access-token: <JWT_TOKEN>" http://localhost:3005/bookingservice/healt
 - **Messaging**: Centralized message queue consumption in Reminder Service with pluggable handlers (`subscribeEvents`).
 
 ## Load Testing
+
 - Tools: **k6** for load, **InfluxDB** for storage, **Grafana** for dashboards.
 - Scenario: Auth → book via API Gateway against Booking Service using staged VUs.
 - Script: `tests/booking_load_test.js`
 
 ### Run locally
+
 ```bash
 # from repo root
 npm --prefix tests install
@@ -226,6 +255,7 @@ k6 run tests/booking_load_test.js
 ```
 
 ### Thresholds (example)
+
 ```js
 thresholds: {
   http_req_duration: ["p(95)<2000"],
@@ -234,15 +264,18 @@ thresholds: {
 ```
 
 ### Result snapshot
+
 - p95 latency ≈ 1.44s, failure rate ≈ 0.14%
 - See dashboard image in `public/k6_test_2.png`.
 
 For detailed setup, rationale, and test evolution, see [docs/load_testing.md](./docs/load_testing.md).
 
 ## Contributing
+
 - Use feature branches and conventional commits.
 - Add/adjust Swagger docs when changing `Auth_service` routes.
 - Ensure migrations are created for DB schema changes.
 
 ## License
+
 ISC
