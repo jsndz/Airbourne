@@ -142,10 +142,10 @@ services:
       - "6565:6565"
     environment:
       - K6_OUT=influxdb=http://influxdb:8086/k6
-    command: run /tests/booking_load_test.js
+    command: run --summary-export=/results/final_report.json /tests/booking_load_test.js
     volumes:
-      - ./tests/booking_load_test.js:/tests/booking_load_test.js
-      - ./tests/health_load.js:/tests/health_load.js
+      - ./tests:/tests
+      - ./results:/results
     depends_on:
       - auth-service
       - flights-service
